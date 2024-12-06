@@ -1,0 +1,14 @@
+PyPDF2
+langchain
+huggingface_hub
+langchain-huggingface
+langchain_community
+langchain_core
+transformers
+torch
+faiss-cpu
+fastapi
+uvicorn
+huggingface_hub
+Spacy
+python -m spacy download en_core_web_lg
