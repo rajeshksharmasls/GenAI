@@ -1,1 +1,7 @@
+phidata
+groq
+duckduckgo-search
+yfinance
+fastapi
+uvicorn
 
