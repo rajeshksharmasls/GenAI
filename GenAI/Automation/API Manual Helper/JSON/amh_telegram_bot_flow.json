@@ -1,0 +1,235 @@
+{
+  "name": "API Manual Helper - Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "878f766f-f020-40d2-8605-4fe213786b8d",
+      "name": "Telegram Trigger",
+      "webhookId": "bd4a0d77-07af-492c-a9e9-5c33210c85de",
+      "credentials": {
+        "telegramApi": {
+          "id": "oeaMHW6oFkVcJyEz",
+          "name": "Telegram account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful API Manual Helper who only answers questions related to API documentation, including endpoints, request/response schemas, parameters, authentication methods, error codes, and usage examples.\nYou must generate and summarize answers only from the given context (uploaded API manuals, specifications, or reference documents).\nIf a user asks an off-topic question, respond exactly with:\n“I can only assist with questions related to the uploaded documents.”\nIf no relevant information or chunks are found in the provided context, respond exactly with:\n“I couldn’t find information related to your query in the documents.”\nDo not provide any additional information.\nDo not generate, infer, or interpret responses using your own knowledge.\nDo not answer questions outside the scope of the uploaded API documentation."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f7807fe8-c9fa-4c8d-ae74-eb0c1f9f894f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "9421f6ae-0df3-46a1-99b1-509b21b1b5f6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wvP76PKNgnnku53g",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "81b4b21a-2fb4-402a-a0ea-961f795e3021",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "634a77e1-7918-4a86-a5b0-18be7480923c",
+      "name": "Send a text message",
+      "webhookId": "15780ed8-26b9-4b66-be44-6a936ad0f1ce",
+      "credentials": {
+        "telegramApi": {
+          "id": "oeaMHW6oFkVcJyEz",
+          "name": "Telegram account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "={{ $json.message.text }}",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "icn8n",
+          "mode": "list",
+          "cachedResultName": "icn8n"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        192
+      ],
+      "id": "27206b58-1f8a-4e83-8f28-d6420be46b87",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "FRT7EaOncTYutlrL",
+          "name": "PineconeApi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        314.5
+      ],
+      "id": "18a0bd9f-c24a-4b2a-a573-864d64df1fa8",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "wvP76PKNgnnku53g",
+          "name": "OpenAi account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "903530df-11c4-4b41-9b3a-8355f3d09b4f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "41240acf8c94b5b273d245c10690530f67c6f5ceb500a7ed33bcc863ab78fa0f"
+  },
+  "id": "uqPJcOBGN5OgtNj9",
+  "tags": []
+}
