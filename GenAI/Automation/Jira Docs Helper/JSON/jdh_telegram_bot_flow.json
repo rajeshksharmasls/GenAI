@@ -1,0 +1,235 @@
+{
+  "name": "Jira Docs Helper - Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bd7449b2-09b9-4e38-a17c-ce062c44003c",
+      "name": "Telegram Trigger",
+      "webhookId": "7525e20b-045c-4bfb-b666-d2d0b63e791e",
+      "credentials": {
+        "telegramApi": {
+          "id": "C1aSF2m7BwVWBhC9",
+          "name": "Telegram account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful Jira Docs Helper Bot that assists users by answering questions based only on the uploaded Jira-related documentation, such as Jira project guides, workflows, issue types, fields, configurations, automation rules, and internal process documents.\nYour role is to retrieve and summarize information strictly from the provided Jira documentation.\nYou must generate responses only from the given context (uploaded Jira documents, issue types).\nIf a user asks a question that is not related to the uploaded Jira documents, respond exactly with:\n“I can only assist with questions related to the uploaded Jira documentation.”\nIf no relevant information or sections are found in the provided context, respond exactly with:\n“I couldn’t find information related to your query in the documents.”\nDo not provide any additional information.\nDo not generate, infer, or interpret responses using your own knowledge.\nDo not answer questions outside the scope of the uploaded Jira documentation."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9966931b-676f-4c8a-8ea7-45ceadcce906",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        208
+      ],
+      "id": "da9daa32-d82a-44f3-a0fc-719b779f746d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wvP76PKNgnnku53g",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "ed52e252-2356-49f0-9abe-2a7bb62a5a8c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "594fea8f-fada-4237-9c5e-f7e17ea1f796",
+      "name": "Send a text message",
+      "webhookId": "18479997-abdb-4d9f-b9a9-45ec6366af0e",
+      "credentials": {
+        "telegramApi": {
+          "id": "C1aSF2m7BwVWBhC9",
+          "name": "Telegram account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "={{ $json.message.text }}",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "icn8n",
+          "mode": "list",
+          "cachedResultName": "icn8n"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        208
+      ],
+      "id": "1ca8bf6a-7bcd-498c-bb3c-e904c77a9947",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "FRT7EaOncTYutlrL",
+          "name": "PineconeApi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        314.5
+      ],
+      "id": "104418e2-75a4-4614-aac8-0c131d43bb02",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "wvP76PKNgnnku53g",
+          "name": "OpenAi account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b7bbf58d-b59c-4471-a8d0-e8bd0b67ad62",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "41240acf8c94b5b273d245c10690530f67c6f5ceb500a7ed33bcc863ab78fa0f"
+  },
+  "id": "K9yENJGokxgxf1Wy",
+  "tags": []
+}
